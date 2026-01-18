@@ -1,0 +1,9 @@
+soil_type_id,soil_name,sand_percentage,silt_percentage,clay_percentage,pH_range_min,pH_range_max,drainage_class,processing_notes
+1,Clay Loam,25.0,40.0,35.0,6.0,7.5,Moderate,Aggregated from 5 soil samples; consistent pH range across region
+2,Sandy Loam,65.0,25.0,10.0,5.5,7.0,Rapid,High sand content requires intensive irrigation management
+3,Loam,40.0,40.0,20.0,6.5,7.5,Moderate,Balanced texture ideal for wheat and barley cultivation
+4,Clay,10.0,30.0,60.0,6.0,8.0,Slow,High clay content; waterlogging risk requires drainage planning
+5,Silty Loam,25.0,60.0,15.0,6.0,7.5,Moderate,Good for cereal crops; moderate water retention
+6,Silt,20.0,70.0,10.0,5.5,7.0,Moderate,Prone to crusting; requires soil structure management
+7,Sandy Clay Loam,50.0,25.0,25.0,6.0,7.5,Moderate,Balanced drainage; suitable for diverse crop rotation
+8,Clay Sandy Loam,45.0,30.0,25.0,6.0,7.5,Moderate,Good workability; versatile for multiple crops

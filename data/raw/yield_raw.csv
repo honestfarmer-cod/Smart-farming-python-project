@@ -1,0 +1,13 @@
+country,admin1,year,crop,harvest_area_ha,yield_hg_ha,production_tons
+Portugal,Centro,2021,Wheat,12500,52000,65000
+Portugal,Centro,2021,Rice,3800,64000,24320
+Portugal,Norte,2021,Barley,7200,48000,34560
+Portugal,Norte,2021,Maize,9100,90000,81900
+Portugal,Centro,2022,Wheat,12800,53500,68480
+Portugal,Centro,2022,Rice,3900,65500,25545
+Portugal,Norte,2022,Barley,7300,49200,35916
+Portugal,Norte,2022,Maize,9300,91000,84630
+Portugal,Centro,2023,Wheat,13000,54800,71240
+Portugal,Centro,2023,Rice,4000,66500,26600
+Portugal,Norte,2023,Barley,7400,50500,37370
+Portugal,Norte,2023,Maize,9500,92500,87875

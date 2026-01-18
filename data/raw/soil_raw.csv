@@ -1,0 +1,9 @@
+sample_id,location_name,lat,lon,soil_texture_class,sand_pct,silt_pct,clay_pct,ph_h2o,organic_matter_pct,cec_cmol_kg,bulk_density_g_cm3,drainage_class
+PT_CL_001,Sintra North,38.82234,-9.39023,Clay loam,24.7,40.3,35.0,6.4,2.1,21.5,1.32,Moderate
+PT_SL_002,Covilhã Valley,40.28123,-7.49234,Sandy loam,65.8,24.2,10.0,5.8,1.4,8.7,1.55,Rapid
+PT_LM_003,Braga Central,41.55234,-8.42123,Loam,40.5,39.5,20.0,6.9,2.4,17.3,1.35,Moderate
+PT_CL_004,Viseu District,40.65123,-7.26234,Clay,10.8,29.2,60.0,7.3,2.8,28.9,1.28,Slow
+PT_SIL_005,Covilhã East,40.23456,-7.45678,Silty loam,24.9,60.1,15.0,6.6,2.0,16.4,1.33,Moderate
+PT_SILT_006,Aveiro Lagoon,40.64123,-8.65234,Silt,19.7,70.3,10.0,5.7,1.7,9.5,1.40,Moderate
+PT_SCL_007,Guarda Plateau,40.53412,-7.26789,Sandy clay loam,49.8,25.2,25.0,6.3,2.2,19.1,1.38,Moderate
+PT_CSL_008,Maia Fields,41.23567,-8.63234,Clay sandy loam,44.6,30.4,25.0,6.7,2.3,18.6,1.36,Moderate

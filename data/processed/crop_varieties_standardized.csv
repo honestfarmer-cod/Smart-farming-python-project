@@ -1,0 +1,9 @@
+variety_id,variety_name,crop_type,origin_country,maturity_days,agua_requirement_mm,temperature_optimal_min,temperature_optimal_max,data_quality_notes
+1,Wheat_V1,Wheat,Portugal,120,350,15.0,25.0,Historical Portuguese variety; moderate disease resistance
+2,Wheat_V2,Wheat,France,115,380,14.0,24.0,Improved French variety; high powdery mildew resistance
+3,Rice_V1,Rice,Portugal,130,800,25.0,35.0,Portuguese landrace; high blast resistance
+4,Rice_V2,Rice,Spain,135,850,24.0,34.0,Spanish hybrid; drought tolerant; very high blast resistance
+5,Barley_V1,Barley,Portugal,110,280,14.0,22.0,Traditional Portuguese malting barley
+6,Barley_V2,Barley,Ireland,105,300,13.0,23.0,Irish brewing variety; strong disease profile
+7,Maize_V1,Maize,USA,125,500,20.0,30.0,High-yield American hybrid; disease monitoring required
+8,Maize_V2,Maize,Brazil,130,550,21.0,32.0,Brazilian variety; excellent drought tolerance

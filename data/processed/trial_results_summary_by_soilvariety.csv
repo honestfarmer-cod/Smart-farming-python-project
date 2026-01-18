@@ -1,0 +1,13 @@
+soil_name,variety_name,total_trials,avg_yield_kg_ha,min_yield_kg_ha,max_yield_kg_ha,yield_stddev,avg_disease_incidence_pct,avg_grain_quality_score,data_cleaning_applied
+Clay Loam,Wheat_V1,6,5380,5100,5700,220,4.8,7.7,Outlier removal (1 trial >5900 removed as measurement error)
+Clay Loam,Wheat_V2,6,5800,5380,6100,280,3.5,8.2,No outliers; stable performance
+Sandy Loam,Rice_V1,6,6100,5800,6300,180,3.3,7.9,No outliers; consistent yields
+Sandy Loam,Rice_V2,6,6250,6050,6350,120,2.4,8.2,No outliers; excellent stability
+Loam,Wheat_V2,6,6050,5700,6150,160,3.8,8.3,No outliers; highest average in loam
+Loam,Barley_V1,6,5100,4900,5300,190,5.2,7.5,Outlier removal (1 trial <4700 due to flooding)
+Clay,Barley_V2,6,5200,5000,5400,150,4.7,7.8,No major outliers
+Clay,Maize_V2,6,5650,5450,5850,140,4.1,7.6,No outliers; good stability
+Silty Loam,Wheat_V1,6,5550,5300,5800,170,4.5,7.6,Null disease value imputed with variety average
+Silty Loam,Barley_V2,6,5050,4850,5250,160,5.0,7.4,Outlier removal (1 trial >5350 due to equipment malfunction)
+Silt,Wheat_V2,6,5750,5500,6000,140,3.9,8.0,No outliers; very stable
+Silt,Maize_V1,6,5400,5200,5600,130,6.1,7.4,Outlier removal (2 trials due to drought stress)
