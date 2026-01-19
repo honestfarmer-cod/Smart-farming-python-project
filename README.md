@@ -24,3 +24,77 @@ python project.py
 ## Tests
 Run tests with:
 pytest
+
+Class: CropYieldPredictor
+A machine learning wrapper for yield prediction.
+
+Key Methods:
+
+Method	Purpose	Returns
+fit(X_train, y_train)	Train the model	dict with r2_score, rmse
+predict(X_test)	Predict yields	numpy array of predictions
+get_feature_importance(top_n)	Feature importance ranking	DataFrame
+Attributes:
+
+model: RandomForestRegressor (100 trees, random_state=42)
+
+scaler: StandardScaler for feature normalization
+
+label_encoders: Dict of LabelEncoders for categorical features
+
+is_trained: Boolean flag for model state
+
+Core Functions
+1. load_and_prepare_data(trial_file, soil_file)
+Purpose: Load and merge trial + soil data
+
+Behavior:
+
+Loads CSV files if they exist
+
+Auto-generates realistic sample data if files missing
+
+Merges on soil_type_id
+
+Handles missing values (drops rows with NaN in key columns)
+
+Generates synthetic yield values for testing
+
+Returns: DataFrame with merged, cleaned data
+
+Sample columns:
+
+text
+trial_id, field_id, variety_name, soil_name, ph, 
+organic_matter_percent, nitrogen_mg_kg, yield_kg_ha
+2. preprocess_features(data)
+Purpose: Transform raw data into ML-ready features
+
+Transformations:
+
+Encode categorical variables (variety_name, soil_name)
+
+Select numeric features (nitrogen, organic matter, pH)
+
+Fill missing values with column means
+
+Create normalized feature set
+
+Returns: (X_features, y_target, feature_names, label_encoders)
+
+3. generate_recommendations(data, model, scaler_data)
+Purpose: Generate variety recommendations for each soil type
+
+Logic:
+
+For each soil type:
+
+Test all crop varieties
+
+Predict yield for each combination
+
+Rank by predicted performance
+
+Return top recommendation
+
+Returns: DataFrame with recommendations
