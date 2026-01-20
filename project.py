@@ -28,7 +28,7 @@ class CropYieldPredictor:
         rmse = np.sqrt(mean_squared_error(y_train, y_pred))
         return {'r2_score': r2, 'rmse': rmse}
  
- #Predict crop yield for new data.
+#Predict crop yield for new data.
 def predict(self, X_test):
         if not self.is_trained:
             raise ValueError("No prediction after training")
@@ -36,7 +36,7 @@ def predict(self, X_test):
         predictions = self.model.predict(X_scaled)
         return np.maximum(predictions, 0)  # Ensure non-negative predictions
  
- #Get the most important features for yield prediction.
+#Get the most important features for yield prediction.
 def get_feature_importance(self, top_n=5):
         importance_df = pd.DataFrame({
             'feature': self.feature_names,
@@ -45,7 +45,7 @@ def get_feature_importance(self, top_n=5):
         
         return importance_df.head(top_n)
  
- #Loading the simulated trial data and soil data, merge them, and prepare them for analysis.(copied from the DMS Project)
+#Loading the simulated trial data and soil data, merge them, and prepare them for analysis.(copied from the DMS Project)
    
 def load_and_prepare_data(trial_file, soil_file):
 # Try to load existing files
@@ -53,10 +53,10 @@ def load_and_prepare_data(trial_file, soil_file):
         trials = pd.read_csv(trial_file)
         soils = pd.read_csv(soil_file)
     else:
-        # Create sample data for demonstration
+# Create sample data for demonstration
         print("Creating sample data for demonstration...")
         
-        # Sample trial data
+# Sample trial data
         trials = pd.DataFrame({
             'trial_id': range(1, 121),
             'field_id': np.repeat(range(1, 9), 15),
@@ -67,7 +67,7 @@ def load_and_prepare_data(trial_file, soil_file):
             'harvest_date': pd.date_range('2024-08-01', periods=120, freq='D')
         })
         
-        # Sample soil data
+# Sample soil data
         soils = pd.DataFrame({
             'soil_type_id': range(1, 9),
             'soil_name': ['Clay', 'Sandy Loam', 'Silt Loam', 'Clay Loam',
@@ -77,13 +77,13 @@ def load_and_prepare_data(trial_file, soil_file):
             'nitrogen_mg_kg': [45, 28, 52, 38, 22, 35, 18, 65]
         })
     
-    # Merge datasets
+# Merge datasets
     merged_data = trials.merge(soils, on='soil_type_id', how='left')
     
-    # Handle missing values
+# Handle missing values
     merged_data = merged_data.dropna(subset=['ph', 'organic_matter_percent', 'nitrogen_mg_kg'])
     
-    # Generate realistic yield values based on soil and variety characteristics
+# Generate realistic yield values based on soil and variety characteristics
     if 'yield_kg_ha' not in merged_data.columns:
         merged_data['yield_kg_ha'] = (
             (merged_data['nitrogen_mg_kg'] / 10) +
@@ -100,7 +100,7 @@ def preprocess_features(data):
 # Create a copy to avoid modifying original
     df = data.copy()
     
-    # Encode categorical variables
+# Encode categorical variables
     label_encoders = {}
     categorical_cols = ['variety_name', 'soil_name']
     
@@ -110,7 +110,7 @@ def preprocess_features(data):
             df[col + '_encoded'] = le.fit_transform(df[col])
             label_encoders[col] = le
     
-    # Select features for the model
+# Select features for the model
     feature_cols = [
         'nitrogen_mg_kg',
         'organic_matter_percent',
@@ -119,7 +119,7 @@ def preprocess_features(data):
         'soil_name_encoded'
     ]
     
-    # Filter to only columns that exist
+# Filter to only columns that exist
     feature_cols = [col for col in feature_cols if col in df.columns]
     
     X = df[feature_cols].fillna(df[feature_cols].mean())
@@ -131,7 +131,7 @@ def preprocess_features(data):
 
 def generate_recommendations(data, model, scaler_data):
     X_features, _, feature_names, encoders = preprocess_features(data)
- # Get unique soil types and varieties
+# Get unique soil types and varieties
     soils = data['soil_name'].unique()
     varieties = data['variety_name'].unique()
     
@@ -144,7 +144,7 @@ def generate_recommendations(data, model, scaler_data):
         results_for_soil = []
         
         for variety in varieties:
-            # Create feature vector for prediction
+# Create feature vector for prediction
             variety_data = data[data['variety_name'] == variety].iloc[0] if variety in data['variety_name'].values else soil_data
             
             features = pd.DataFrame({
@@ -169,7 +169,7 @@ def generate_recommendations(data, model, scaler_data):
                 best_yield = predicted_yield
                 best_variety = variety
         
-        # Add recommendation for best variety
+# Add recommendation for best variety
         best_rec = next((r for r in results_for_soil if r['variety_name'] == best_variety), None)
         if best_rec:
             best_rec['rank'] = '1st - RECOMMENDED'
@@ -179,16 +179,16 @@ def generate_recommendations(data, model, scaler_data):
 
 #Save prediction and recommendation results to CSV files.
 def save_results(predictions, recommendations, output_dir='output'):
-  # Create output directory if needed
+# Create output directory if needed
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    # Save prediction results
+# Save prediction results
     pred_file = os.path.join(output_dir, 'yield_predictions.csv')
     predictions.to_csv(pred_file, index=False)
     print(f"✓ Predictions saved to {pred_file}")
     
-    # Save recommendations
+# Save recommendations
     rec_file = os.path.join(output_dir, 'variety_recommendations.csv')
     recommendations.to_csv(rec_file, index=False)
     print(f"✓ Recommendations saved to {rec_file}")
@@ -204,19 +204,19 @@ def main():
     print("CROP YIELD PREDICTION & RECOMMENDATION SYSTEM")
     print("="*70)
     
-    # Step 1: Load and prepare data
+# Step 1: Load and prepare data
     print("\n[Step 1] Loading and preparing data...")
     data = load_and_prepare_data('data/trial_data.csv', 'data/soil_data.csv')
     print(f"  ✓ Loaded {len(data)} trial records")
     print(f"  ✓ Data columns: {list(data.columns)[:5]}...")
     
-    # Step 2: Preprocess features
+# Step 2: Preprocess features
     print("\n[Step 2] Preprocessing features...")
     X, y, feature_names, encoders = preprocess_features(data)
     print(f"  ✓ Features: {feature_names}")
     print(f"  ✓ Target range: {y.min():.2f} - {y.max():.2f} kg/ha")
     
-    # Step 3: Split data
+# Step 3: Split data
     print("\n[Step 3] Splitting data into train/test sets...")
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
@@ -224,7 +224,7 @@ def main():
     print(f"  ✓ Training set: {len(X_train)} records")
     print(f"  ✓ Test set: {len(X_test)} records")
     
-    # Step 4: Train model
+# Step 4: Train model
     print("\n[Step 4] Training CropYieldPredictor model...")
     predictor = CropYieldPredictor()
     predictor.feature_names = feature_names
@@ -232,14 +232,14 @@ def main():
     print(f"  ✓ Training R² score: {metrics['r2_score']:.4f}")
     print(f"  ✓ Training RMSE: {metrics['rmse']:.2f} kg/ha")
     
-    # Evaluate on test set
+# Evaluate on test set
     y_pred_test = predictor.predict(X_test)
     test_r2 = r2_score(y_test, y_pred_test)
     test_rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
     print(f"  ✓ Test R² score: {test_r2:.4f}")
     print(f"  ✓ Test RMSE: {test_rmse:.2f} kg/ha")
     
-    # Step 5: Generate predictions for all data
+# Step 5: Generate predictions for all data
     print("\n[Step 5] Generating predictions for all records...")
     all_predictions = predictor.predict(X)
     data['predicted_yield_kg_ha'] = all_predictions
@@ -247,23 +247,23 @@ def main():
     print(f"  ✓ Predicted yields for {len(data)} records")
     print(f"  ✓ Mean prediction error: {data['prediction_error'].mean():.2f} kg/ha")
     
-    # Step 6: Generate recommendations
+# Step 6: Generate recommendations
     print("\n[Step 6] Generating variety recommendations...")
     recommendations = generate_recommendations(data, predictor, (X, y, feature_names, encoders))
     print(f"  ✓ Generated {len(recommendations)} recommendations")
     print(f"  ✓ Average recommended yield: {recommendations['predicted_yield_kg_ha'].mean():.2f} kg/ha")
     
-    # Display feature importance
+# Display feature importance
     print("\n[Step 7] Feature importance analysis...")
     importance = predictor.get_feature_importance(top_n=5)
     for idx, row in importance.iterrows():
         print(f"  • {row['feature']}: {row['importance']:.4f}")
     
-    # Step 8: Save results
+# Step 8: Save results
     print("\n[Step 8] Saving results to CSV files...")
     pred_file, rec_file = save_results(data, recommendations)
     
-    # Summary statistics
+# Summary statistics
     print("\n" + "="*70)
     print("ANALYSIS COMPLETE - SUMMARY STATISTICS")
     print("="*70)

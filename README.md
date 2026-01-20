@@ -132,3 +132,93 @@ Generate variety recommendations
 Analyze feature importance
 
 Save results to CSV
+
+
+Test Coverage (8 test functions + 1 integration test)
+1. test_predictor_fit_returns_valid_metrics()
+Tests: CropYieldPredictor.fit() method
+
+Corner cases:
+
+Returns dict with r2_score, rmse keys
+
+R² score in valid range [0, 1]
+
+RMSE is non-negative
+
+2. test_predictor_fit_with_larger_dataset()
+Tests: Scalability with larger data
+
+Corner cases:
+
+Works with 100+ records
+
+Handles mixed feature types
+
+Metrics are consistent
+
+3. test_predictor_predict_requires_training()
+Tests: Error handling - predict before training
+
+Corner cases:
+
+Raises ValueError if untrained
+
+Error message is informative
+
+4. test_predictor_predict_returns_non_negative_yields()
+Tests: CropYieldPredictor.predict() correctness
+
+Corner cases:
+
+All predictions >= 0 (physical validity)
+
+Returns numpy array
+
+Array length matches input
+
+5. test_load_and_prepare_data_creates_sample_data()
+Tests: Automatic data generation
+
+Corner cases:
+
+Creates sample if files missing
+
+Returns DataFrame with required columns
+
+No missing values in critical columns
+
+6. test_load_and_prepare_data_handles_missing_values()
+Tests: Data cleaning functionality
+
+Corner cases:
+
+Removes rows with NaN
+
+No NaN in key columns after cleaning
+
+Retains sufficient data
+
+7. test_preprocess_features_returns_valid_outputs()
+Tests: Feature preprocessing
+
+Corner cases:
+
+Returns 4-tuple (X, y, names, encoders)
+
+X has only numeric values
+
+X and y same length
+
+No NaN values
+
+8. test_preprocess_features_encodes_varieties()
+Tests: Categorical encoding
+
+Corner cases:
+
+Variety names encoded to integers
+
+Encoders persist in dict
+
+Encoded values in reasonable range

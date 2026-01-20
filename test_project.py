@@ -109,5 +109,71 @@ def test_predictor_predict_returns_non_negative_yields():
     assert isinstance(predictions, np.ndarray), "Should return numpy array"
     assert len(predictions) == 3, "Should have 3 predictions for 3 samples"
     assert all(pred >= 0 for pred in predictions), "All predictions should be non-negative"
+ 
 
+ #Test that load_and_prepare_data() creates sample data if files don't exist.
+def test_load_and_prepare_data_creates_sample_data():
+# Execute: Call with non-existent files to trigger sample generation
+    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+# Assert
+    assert isinstance(data, pd.DataFrame), "Should return DataFrame"
+    assert len(data) > 0, "Should have data rows"
     
+    required_cols = ['yield_kg_ha', 'ph', 'organic_matter_percent', 'nitrogen_mg_kg']
+    for col in required_cols:
+        assert col in data.columns, f"Should contain '{col}' column"
+        assert data[col].notna().all(), f"'{col}' should have no missing values"
+    
+    assert (data['yield_kg_ha'] >= 0).all(), "Yields should be non-negative"
+    assert (data['ph'] >= 6.5).all() and (data['ph'] <= 7.5).all(), "pH should be in valid range"
+
+
+
+#Test that load_and_prepare_data() properly handles missing data.
+def test_load_and_prepare_data_handles_missing_values():
+ # Execute
+    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+# Assert
+    critical_cols = ['ph', 'organic_matter_percent', 'nitrogen_mg_kg', 'yield_kg_ha']
+    for col in critical_cols:
+        assert data[col].isna().sum() == 0, f"'{col}' should have no missing values after prepare"
+    
+    assert len(data) >= 50, "Should retain sufficient data after cleaning"   
+
+
+#Test that preprocess_features() returns correctly structured outputs.
+def test_preprocess_features_returns_valid_outputs():
+# Setup: Create sample data
+    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+# Execute
+    X, y, feature_names, encoders = preprocess_features(data)
+# Assert
+    assert isinstance(X, pd.DataFrame), "X should be DataFrame"
+    assert isinstance(y, pd.Series), "y should be Series"
+    assert isinstance(feature_names, list), "feature_names should be list"
+    assert isinstance(encoders, dict), "encoders should be dict"
+    
+    assert len(X) == len(y), "X and y should have same length"
+    assert len(feature_names) >= 3, "Should have at least 3 features"
+    assert len(encoders) >= 1, "Should have at least 1 encoder for categorical vars"
+# Check X contains only numeric values
+    assert X.dtypes.apply(lambda x: pd.api.types.is_numeric_dtype(x)).all(), \
+        "All features should be numeric"
+# Check no Na values
+    assert X.isna().sum().sum() == 0, "X should have no missing values"
+    assert y.isna().sum() == 0, "y should have no missing values"
+
+
+#Test that preprocess_features() properly encodes categorical variety data.
+def test_preprocess_features_encodes_varieties():
+# Setup
+    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+# Execute
+    X, y, feature_names, encoders = preprocess_features(data)
+# Assert
+    assert 'variety_name_encoded' in feature_names, "Should have variety encoding"
+    assert 'variety_name' in encoders, "Should have variety_name encoder"
+# Check that encoded values are integers in reasonable range
+    variety_encoded = X['variety_name_encoded']
+    assert variety_encoded.dtype in [np.int32, np.int64], "Should be encoded as integers"
+    assert variety_encoded.min() >= 0, "Encoded values should be non-negative"
