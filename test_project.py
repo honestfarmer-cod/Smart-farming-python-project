@@ -177,3 +177,38 @@ def test_preprocess_features_encodes_varieties():
     variety_encoded = X['variety_name_encoded']
     assert variety_encoded.dtype in [np.int32, np.int64], "Should be encoded as integers"
     assert variety_encoded.min() >= 0, "Encoded values should be non-negative"
+
+# Incoperate integration test
+#Integration test: Load -> Preprocess -> Train -> Predict full workflow.
+def test_full_pipeline_integration():
+# Step 1: Load data
+    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+    assert len(data) > 0, "Data loading failed"
+    
+# Step 2: Preprocess
+    X, y, feature_names, encoders = preprocess_features(data)
+    assert len(X) > 0 and len(y) > 0, "Preprocessing failed"
+    
+# Step 3: Train
+    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    predictor = CropYieldPredictor()
+    predictor.feature_names = feature_names
+    metrics = predictor.fit(X_train, y_train)
+    assert metrics['r2_score'] >= 0, "Training failed"
+    
+# Step 4: Predict
+    predictions = predictor.predict(X_test)
+    assert len(predictions) == len(X_test), "Prediction count mismatch"
+    assert all(pred >= 0 for pred in predictions), "Invalid predictions"
+    
+# Step 5: Validate
+    assert len(data) >= len(X), "Data integrity check failed"
+    print(f"\n✓ Integration test passed: {len(data)} records processed, "
+          f"R²={metrics['r2_score']:.4f}, RMSE={metrics['rmse']:.2f} kg/ha")
+
+
+if __name__ == "__main__":
+# Run tests with: python -m pytest test_project.py -v
+    pytest.main([__file__, "-v"])
