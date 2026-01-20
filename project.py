@@ -48,26 +48,30 @@ def get_feature_importance(self, top_n=5):
 #Loading the simulated trial data and soil data, merge them, and prepare them for analysis.(copied from the DMS Project)
    
 def load_and_prepare_data(trial_file, soil_file):
-# Try to load existing files
+    # Try to load existing files
     if os.path.exists(trial_file) and os.path.exists(soil_file):
         trials = pd.read_csv(trial_file)
         soils = pd.read_csv(soil_file)
+
+        # ✅ If processed dataset does NOT contain soil_type_id, skip merge
+        if "soil_type_id" not in trials.columns:
+            print("✓ Processed summary dataset detected (no soil_type_id). Skipping merge.")
+            return trials
+
     else:
-# Create sample data for demonstration
+        # Create sample data for demonstration
         print("Creating sample data for demonstration...")
-        
-# Sample trial data
+
         trials = pd.DataFrame({
             'trial_id': range(1, 121),
             'field_id': np.repeat(range(1, 9), 15),
-            'variety_name': np.tile(['Variety A', 'Variety B', 'Variety C', 'Variety D', 
+            'variety_name': np.tile(['Variety A', 'Variety B', 'Variety C', 'Variety D',
                                      'Variety E', 'Variety F', 'Variety G', 'Variety H'], 15),
             'soil_type_id': np.repeat(range(1, 9), 15),
             'planting_date': pd.date_range('2024-03-01', periods=120, freq='D'),
             'harvest_date': pd.date_range('2024-08-01', periods=120, freq='D')
         })
-        
-# Sample soil data
+
         soils = pd.DataFrame({
             'soil_type_id': range(1, 9),
             'soil_name': ['Clay', 'Sandy Loam', 'Silt Loam', 'Clay Loam',
@@ -76,14 +80,14 @@ def load_and_prepare_data(trial_file, soil_file):
             'organic_matter_percent': [3.5, 2.1, 4.2, 3.8, 1.9, 2.8, 1.5, 8.2],
             'nitrogen_mg_kg': [45, 28, 52, 38, 22, 35, 18, 65]
         })
-    
-# Merge datasets
+
+    # Merge datasets (only works if soil_type_id exists)
     merged_data = trials.merge(soils, on='soil_type_id', how='left')
-    
-# Handle missing values
+
+    # Handle missing values
     merged_data = merged_data.dropna(subset=['ph', 'organic_matter_percent', 'nitrogen_mg_kg'])
-    
-# Generate realistic yield values based on soil and variety characteristics
+
+    # Generate realistic yield values if missing
     if 'yield_kg_ha' not in merged_data.columns:
         merged_data['yield_kg_ha'] = (
             (merged_data['nitrogen_mg_kg'] / 10) +
@@ -92,8 +96,9 @@ def load_and_prepare_data(trial_file, soil_file):
             np.random.normal(0, 200, len(merged_data))
         )
         merged_data['yield_kg_ha'] = merged_data['yield_kg_ha'].clip(lower=500)
-    
+
     return merged_data
+
 
 #Prepare features for machine learning model
 def preprocess_features(data):
@@ -206,7 +211,8 @@ def main():
     
 # Step 1: Load and prepare data
     print("\n[Step 1] Loading and preparing data...")
-    data = load_and_prepare_data('data/trial_data.csv', 'data/soil_data.csv')
+    data = load_and_prepare_data("data/processed/trial_results_summary_by_soilvariety.csv",
+    "data/processed/soil_types_cleaned.csv")
     print(f"  ✓ Loaded {len(data)} trial records")
     print(f"  ✓ Data columns: {list(data.columns)[:5]}...")
     
