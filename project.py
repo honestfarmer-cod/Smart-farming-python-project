@@ -8,6 +8,8 @@ import csv
 import sys
 import os
 
+#A machine learning model for predicting crop yields based on soil,
+    environmental, and crop variety characteristics.
 class CropYieldPredictor:
  def __init__(self):
         self.model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
@@ -16,6 +18,7 @@ class CropYieldPredictor:
         self.feature_names = []
         self.is_trained = False
 
+#Train the yield prediction model.
  def fit(self, X_train, y_train):
         X_scaled = self.scaler.fit_transform(X_train)
         self.model.fit(X_scaled, y_train)
@@ -25,7 +28,7 @@ class CropYieldPredictor:
         rmse = np.sqrt(mean_squared_error(y_train, y_pred))
         return {'r2_score': r2, 'rmse': rmse}
  
- 
+ #Predict crop yield for new data.
 def predict(self, X_test):
         if not self.is_trained:
             raise ValueError("No prediction after training")
@@ -33,6 +36,7 @@ def predict(self, X_test):
         predictions = self.model.predict(X_scaled)
         return np.maximum(predictions, 0)  # Ensure non-negative predictions
  
+ #Get the most important features for yield prediction.
 def get_feature_importance(self, top_n=5):
         importance_df = pd.DataFrame({
             'feature': self.feature_names,
@@ -40,7 +44,9 @@ def get_feature_importance(self, top_n=5):
         }).sort_values('importance', ascending=False)
         
         return importance_df.head(top_n)
-
+ 
+ #Loading the simulated trial data and soil data, merge them, and prepare them for analysis.(copied from the DMS Project)
+   
 def load_and_prepare_data(trial_file, soil_file):
 # Try to load existing files
     if os.path.exists(trial_file) and os.path.exists(soil_file):
@@ -89,6 +95,7 @@ def load_and_prepare_data(trial_file, soil_file):
     
     return merged_data
 
+#Prepare features for machine learning model
 def preprocess_features(data):
 # Create a copy to avoid modifying original
     df = data.copy()
@@ -120,6 +127,7 @@ def preprocess_features(data):
     
     return X, y, feature_cols, label_encoders
 
+#Generate crop variety recommendations based on predicted yields.
 
 def generate_recommendations(data, model, scaler_data):
     X_features, _, feature_names, encoders = preprocess_features(data)
@@ -168,3 +176,21 @@ def generate_recommendations(data, model, scaler_data):
             recommendations.append(best_rec)
     
     return pd.DataFrame(recommendations)
+
+#Save prediction and recommendation results to CSV files.
+def save_results(predictions, recommendations, output_dir='output'):
+  # Create output directory if needed
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # Save prediction results
+    pred_file = os.path.join(output_dir, 'yield_predictions.csv')
+    predictions.to_csv(pred_file, index=False)
+    print(f"✓ Predictions saved to {pred_file}")
+    
+    # Save recommendations
+    rec_file = os.path.join(output_dir, 'variety_recommendations.csv')
+    recommendations.to_csv(rec_file, index=False)
+    print(f"✓ Recommendations saved to {rec_file}")
+    
+    return pred_file, rec_file

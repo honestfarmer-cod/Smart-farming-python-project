@@ -98,3 +98,37 @@ Rank by predicted performance
 Return top recommendation
 
 Returns: DataFrame with recommendations
+
+4. save_results(predictions, recommendations, output_dir)
+Purpose: Export analysis results to CSV files
+
+Creates:
+
+output/yield_predictions.csv - Full prediction dataset
+
+output/variety_recommendations.csv - Recommended varieties
+
+Returns: (predictions_file, recommendations_file)
+
+5. main()
+Purpose: Orchestrate entire workflow
+
+Workflow Steps:
+
+Load and prepare data
+
+Preprocess features
+
+Split into train/test (80/20 split)
+
+Train CropYieldPredictor model
+
+Evaluate on test set
+
+Generate predictions for all data
+
+Generate variety recommendations
+
+Analyze feature importance
+
+Save results to CSV
