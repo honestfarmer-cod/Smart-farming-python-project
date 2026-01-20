@@ -221,4 +221,4 @@ Variety names encoded to integers
 
 Encoders persist in dict
 
-Encoded values in reasonable range
+Encoded values in reasonable range.
