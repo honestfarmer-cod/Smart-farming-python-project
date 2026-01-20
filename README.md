@@ -12,13 +12,16 @@ The program reads processed datasets from:
 ### 1) Create and activate a virtual environment (recommended)
 
 Windows PowerShell:
+```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 
 ### 2) Install requirements
+```powershell
 pip install -r requirements.txt
 
 ### 3) Run the program
+```powershell
 python project.py
 
 ## Tests
