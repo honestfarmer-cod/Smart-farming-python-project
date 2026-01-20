@@ -11,7 +11,7 @@ import os
 #A machine learning model for predicting crop yields based on soil,
     
 class CropYieldPredictor:
- def __init__(self):
+    def __init__(self):
         self.model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         self.scaler = StandardScaler()
         self.label_encoders = {}
@@ -19,7 +19,7 @@ class CropYieldPredictor:
         self.is_trained = False
 
 #Train the yield prediction model.
- def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train):
         X_scaled = self.scaler.fit_transform(X_train)
         self.model.fit(X_scaled, y_train)
         self.is_trained = True
@@ -28,16 +28,16 @@ class CropYieldPredictor:
         rmse = np.sqrt(mean_squared_error(y_train, y_pred))
         return {'r2_score': r2, 'rmse': rmse}
  
-#Predict crop yield for new data.
-def predict(self, X_test):
+    #Predict crop yield for new data.
+    def predict(self, X_test):
         if not self.is_trained:
-            raise ValueError("No prediction after training")
+            raise ValueError("Model must be trained before prediction")
         X_scaled = self.scaler.transform(X_test)
         predictions = self.model.predict(X_scaled)
         return np.maximum(predictions, 0)  # Ensure non-negative predictions
  
-#Get the most important features for yield prediction.
-def get_feature_importance(self, top_n=5):
+    #Get the most important features for yield prediction.
+    def get_feature_importance(self, top_n=5):
         importance_df = pd.DataFrame({
             'feature': self.feature_names,
             'importance': self.model.feature_importances_
@@ -76,7 +76,7 @@ def load_and_prepare_data(trial_file, soil_file):
             'soil_type_id': range(1, 9),
             'soil_name': ['Clay', 'Sandy Loam', 'Silt Loam', 'Clay Loam',
                          'Sandy Clay', 'Silty Clay', 'Loamy Sand', 'Peat'],
-            'ph': [6.8, 7.2, 6.9, 7.1, 6.7, 6.5, 7.3, 5.9],
+            'ph': [6.8, 7.2, 6.9, 7.1, 6.7, 6.5, 7.3, 6.6],
             'organic_matter_percent': [3.5, 2.1, 4.2, 3.8, 1.9, 2.8, 1.5, 8.2],
             'nitrogen_mg_kg': [45, 28, 52, 38, 22, 35, 18, 65]
         })
