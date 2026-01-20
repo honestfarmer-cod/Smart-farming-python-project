@@ -9,7 +9,7 @@ import sys
 import os
 
 #A machine learning model for predicting crop yields based on soil,
-    environmental, and crop variety characteristics.
+    
 class CropYieldPredictor:
  def __init__(self):
         self.model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
@@ -194,3 +194,99 @@ def save_results(predictions, recommendations, output_dir='output'):
     print(f"✓ Recommendations saved to {rec_file}")
     
     return pred_file, rec_file
+
+def main():
+    
+#Main function orchestrating the entire crop yield prediction workflow.
+    
+  
+    print("="*70)
+    print("CROP YIELD PREDICTION & RECOMMENDATION SYSTEM")
+    print("="*70)
+    
+    # Step 1: Load and prepare data
+    print("\n[Step 1] Loading and preparing data...")
+    data = load_and_prepare_data('data/trial_data.csv', 'data/soil_data.csv')
+    print(f"  ✓ Loaded {len(data)} trial records")
+    print(f"  ✓ Data columns: {list(data.columns)[:5]}...")
+    
+    # Step 2: Preprocess features
+    print("\n[Step 2] Preprocessing features...")
+    X, y, feature_names, encoders = preprocess_features(data)
+    print(f"  ✓ Features: {feature_names}")
+    print(f"  ✓ Target range: {y.min():.2f} - {y.max():.2f} kg/ha")
+    
+    # Step 3: Split data
+    print("\n[Step 3] Splitting data into train/test sets...")
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+    print(f"  ✓ Training set: {len(X_train)} records")
+    print(f"  ✓ Test set: {len(X_test)} records")
+    
+    # Step 4: Train model
+    print("\n[Step 4] Training CropYieldPredictor model...")
+    predictor = CropYieldPredictor()
+    predictor.feature_names = feature_names
+    metrics = predictor.fit(X_train, y_train)
+    print(f"  ✓ Training R² score: {metrics['r2_score']:.4f}")
+    print(f"  ✓ Training RMSE: {metrics['rmse']:.2f} kg/ha")
+    
+    # Evaluate on test set
+    y_pred_test = predictor.predict(X_test)
+    test_r2 = r2_score(y_test, y_pred_test)
+    test_rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
+    print(f"  ✓ Test R² score: {test_r2:.4f}")
+    print(f"  ✓ Test RMSE: {test_rmse:.2f} kg/ha")
+    
+    # Step 5: Generate predictions for all data
+    print("\n[Step 5] Generating predictions for all records...")
+    all_predictions = predictor.predict(X)
+    data['predicted_yield_kg_ha'] = all_predictions
+    data['prediction_error'] = abs(data['yield_kg_ha'] - data['predicted_yield_kg_ha'])
+    print(f"  ✓ Predicted yields for {len(data)} records")
+    print(f"  ✓ Mean prediction error: {data['prediction_error'].mean():.2f} kg/ha")
+    
+    # Step 6: Generate recommendations
+    print("\n[Step 6] Generating variety recommendations...")
+    recommendations = generate_recommendations(data, predictor, (X, y, feature_names, encoders))
+    print(f"  ✓ Generated {len(recommendations)} recommendations")
+    print(f"  ✓ Average recommended yield: {recommendations['predicted_yield_kg_ha'].mean():.2f} kg/ha")
+    
+    # Display feature importance
+    print("\n[Step 7] Feature importance analysis...")
+    importance = predictor.get_feature_importance(top_n=5)
+    for idx, row in importance.iterrows():
+        print(f"  • {row['feature']}: {row['importance']:.4f}")
+    
+    # Step 8: Save results
+    print("\n[Step 8] Saving results to CSV files...")
+    pred_file, rec_file = save_results(data, recommendations)
+    
+    # Summary statistics
+    print("\n" + "="*70)
+    print("ANALYSIS COMPLETE - SUMMARY STATISTICS")
+    print("="*70)
+    summary = {
+        'total_records': len(data),
+        'avg_actual_yield': data['yield_kg_ha'].mean(),
+        'avg_predicted_yield': data['predicted_yield_kg_ha'].mean(),
+        'model_r2_test': test_r2,
+        'model_rmse_test': test_rmse,
+        'recommendations_count': len(recommendations),
+        'top_feature': importance.iloc[0]['feature']
+    }
+    
+    for key, value in summary.items():
+        if isinstance(value, float):
+            print(f"  {key}: {value:.4f}")
+        else:
+            print(f"  {key}: {value}")
+    
+    print("="*70)
+    
+    return summary
+
+
+if __name__ == "__main__":
+    main()
