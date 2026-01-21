@@ -1,232 +1,246 @@
-# Smart Farming Python Project
+# Smart Farming Crop Yield Prediction & Recommendation System
 
-This project analyzes smart farming trial results and recommends the best crop varieties for each soil type.
+This repository contains our **Python Final Project (2025/2026)** for the *Masters in Data Science applied to agricultural and food sciences, environment, and forestry engineering*.
 
-## Datasets Used
-The program reads processed datasets from:
-- data/processed/trial_results_summary_by_soilvariety.csv
-- data/processed/soil_types_cleaned.csv
-- data/processed/crop_varieties_standardized.csv
-
-Note: If the processed summary dataset is detected (no `soil_type_id` column), the program automatically skips merging and uses the processed file directly.
+The project builds a complete workflow to:
+- load smart-farming field trial + soil datasets (real files or demo mode)
+- train a machine learning model to **predict crop yield (kg/ha)**
+- generate **best crop variety recommendations per soil texture class**
+- export results into CSV files for reporting
 
 ---
 
-## How to Run (Windows PowerShell)
+## What the Program Does
 
-```powershell
-# 1) Create and activate virtual environment
-python -m venv .venv
-.venv\Scripts\Activate.ps1
+When you run `project.py`, it performs these steps:
 
-# 2) Install requirements
-pip install -r requirements.txt
+1. **Load & prepare data**  
+   Reads the raw trial dataset and merges soil composition information.
 
-# 3) Run the program
-python project.py
+2. **Preprocess features**  
+   Encodes categorical columns and selects numeric features for ML.
 
-# 4) Run tests
-python -m pytest
+3. **Train/Test split (80/20)**  
+   Splits data into training and testing sets.
+
+4. **Train ML model**  
+   Uses a `RandomForestRegressor` to learn yield patterns.
+
+5. **Evaluate model**
+   Prints **R²** and **RMSE** performance on the test set.
+
+6. **Predict yields**
+   Predicts yield for all available trial records.
+
+7. **Generate variety recommendations**
+   For each soil type, finds the variety with the best predicted yield.
+
+8. **Save outputs**
+   Saves predictions and recommendations into `outputs/`.
+
+---
+
+## Project Structure
+
+```
+smart-farming-python-project/
+│
+├── project.py
+├── test_project.py
+├── requirements.txt
+├── README.md
+│
+├── data/
+│   ├── raw/
+│   │   ├── trials_raw.csv
+│   │   ├── yield_raw.csv        (optional)
+│   │   └── soil_raw.csv         (optional)
+│   │
+│   └── processed/
+│       ├── soil_types_cleaned.csv
+│       ├── crop_varieties_standardized.csv
+│       └── trial_results_summary_by_soilvariety.csv (reference)
+│
+├── outputs/
+│   ├── yield_predictions.csv
+│   └── variety_recommendations.csv
+│
+└── docs/
 ```
 
 ---
 
-## Class: CropYieldPredictor
+## Datasets Used
 
-A machine learning wrapper for yield prediction.
+The program is designed to work with the datasets from our earlier **DMS project**.
 
-### Key Methods:
+### Required file (recommended)
+Place inside: `data/raw/`
+- `trials_raw.csv`
+
+### Soil data (required for merge)
+Place inside: `data/processed/`
+- `soil_types_cleaned.csv`
+
+### Optional files
+Place inside: `data/raw/`
+- `yield_raw.csv`  
+  Used only if it includes `trial_code` and `yield_kg_ha` (otherwise yield is read from `trials_raw.csv`)
+
+- `soil_raw.csv`  
+  Not required if you already use the cleaned soil dataset.
+
+### Demo / test mode
+If real CSV files are missing, the program automatically generates **sample demo data** so it can still run.
+
+---
+
+## Installation
+
+### 1) Create and activate a virtual environment (Windows PowerShell)
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 2) Install requirements
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+## How to Run
+
+From the project root directory:
+
+```bash
+python project.py
+```
+
+---
+
+## Output Files
+
+After a successful run, two files will be created inside `outputs/`:
+
+- `outputs/yield_predictions.csv`  
+  Contains the original trial data + predicted yield and absolute prediction error.
+
+- `outputs/variety_recommendations.csv`  
+  Shows the recommended variety for each soil texture class and its predicted yield.
+
+---
+
+## Class: `CropYieldPredictor`
+
+`CropYieldPredictor` is a wrapper around a machine learning model that predicts crop yield.
+
+### Key Methods
 
 | Method | Purpose | Returns |
 |------|---------|---------|
 | `fit(X_train, y_train)` | Train the model | `dict` with `r2_score`, `rmse` |
 | `predict(X_test)` | Predict yields | NumPy array of predictions |
-| `get_feature_importance(top_n)` | Feature importance ranking | DataFrame |
+| `get_feature_importance(top_n)` | Show most important features | DataFrame |
 
-### Attributes:
-- `model`: RandomForestRegressor (100 trees, `random_state=42`)
-- `scaler`: StandardScaler for feature normalization
-- `label_encoders`: Dictionary of LabelEncoder objects for categorical features
-- `is_trained`: Boolean flag for model state
+### Key Attributes
+
+- `model`: `RandomForestRegressor(n_estimators=100, random_state=42)`
+- `scaler`: `StandardScaler()` for feature scaling
+- `label_encoders`: encoders for categorical columns
+- `feature_names`: list of feature columns used in training
+- `is_trained`: indicates whether training has been completed
 
 ---
 
-## Core Functions
+## Core Functions (project.py)
 
-### 1) load_and_prepare_data(trial_file, soil_file)
-**Purpose:** Load and merge trial + soil data
+### 1) `load_and_prepare_data(trials_file, yield_file, soil_file)`
+Loads trial and soil data, and merges them into one dataset.
 
 **Behavior:**
-- Loads CSV files if they exist
-- Auto-generates sample data if files are missing
-- Merges on `soil_type_id` (when applicable)
-- Handles missing values (drops rows with NaN in key columns)
-- Generates synthetic yield values for testing (if missing)
-
-**Returns:** DataFrame with merged, cleaned data
-
-**Sample columns:**
-```text
-trial_id, field_id, variety_name, soil_name, ph,
-organic_matter_percent, nitrogen_mg_kg, yield_kg_ha
-```
+- reads CSV files if they exist
+- optionally merges yield values using `trial_code`
+- standardizes merge keys (case/spacing)
+- merges soil texture class with soil composition information
+- generates demo sample data if files are missing
 
 ---
 
 ### 2) `preprocess_features(data)`
-**Purpose:** Transform raw data into ML-ready features.
+Prepares ML-ready features and target values.
 
 **Transformations:**
-- Encode categorical variables (`variety_name`, `soil_name`)
-- Select numeric features (nitrogen, organic matter, pH)
-- Fill missing values with column means
+- encodes categorical columns:
+  - `crop`
+  - `variety_name`
+  - `soil_texture_class`
+- selects numeric + encoded features for training
+- fills missing values using mean imputation
 
 **Returns:**
-`(X_features, y_target, feature_names, label_encoders)`
+`X, y, feature_cols, label_encoders`
 
 ---
 
-### 3) `generate_recommendations(data, model, scaler_data)`
-**Purpose:** Generate variety recommendations for each soil type.
+### 3) `generate_recommendations(data, model)`
+Predicts yields for each variety and recommends the best variety per soil type.
 
-**Logic:**
-For each soil type:
-- Test all crop varieties
-- Predict yield for each combination
-- Rank by predicted performance
-- Return top recommendation
-
-**Returns:** DataFrame with recommendations
+**Returns:**  
+A DataFrame with columns:
+- `soil_texture_class`
+- `recommended_variety`
+- `predicted_yield_kg_ha`
 
 ---
 
-### 4) `save_results(predictions, recommendations, output_dir)`
-**Purpose:** Export analysis results to CSV files.
-
-**Creates:**
-- `outputs/yield_predictions.csv` - Full prediction dataset
-- `outputs/variety_recommendations.csv` - Recommended varieties
-
-**Returns:** `(predictions_file, recommendations_file)`
+### 4) `save_results(predictions, recommendations, output_dir="outputs")`
+Saves:
+- `yield_predictions.csv`
+- `variety_recommendations.csv`
 
 ---
 
 ### 5) `main()`
-**Purpose:** Orchestrate the entire workflow.
-
-**Workflow Steps:**
-- Load and prepare data
-- Preprocess features
-- Split into train/test (80/20 split)
-- Train CropYieldPredictor model
-- Evaluate on test set
-- Generate predictions for all data
-- Generate variety recommendations
-- Analyze feature importance
-- Save results to CSV
-
-## Test Coverage (8 test functions + 1 integration test)
-
-### 1. test_predictor_fit_returns_valid_metrics()
-Tests: CropYieldPredictor.fit() method
-
-Corner cases:
-
-Returns dict with r2_score, rmse keys
-
-R² score in valid range [0, 1]
-
-RMSE is non-negative
+Runs the full workflow end-to-end and prints a summary report.
 
 ---
 
-### 2. test_predictor_fit_with_larger_dataset()
-Tests: Scalability with larger data
+## How to Run Tests
 
-Corner cases:
+Run all tests:
 
-Works with 100+ records
+```bash
+pytest -v
+```
 
-Handles mixed feature types
+Or run only this file:
 
-Metrics are consistent
+```bash
+pytest test_project.py -v
+```
 
----
-
-### 3. test_predictor_predict_requires_training()
-Tests: Error handling - predict before training
-
-Corner cases:
-
-Raises ValueError if untrained
-
-Error message is informative
-
----
-
-### 4. test_predictor_predict_returns_non_negative_yields()
-Tests: CropYieldPredictor.predict() correctness
-
-Corner cases:
-
-All predictions >= 0 (physical validity)
-
-Returns numpy array
-
-Array length matches input
+### Test Coverage Summary
+The test suite validates:
+- training metrics are returned correctly
+- prediction errors are handled correctly (must train before predict)
+- predictions are non-negative
+- data loading works even when files are missing (demo mode)
+- preprocessing produces numeric features without NaNs
+- an end-to-end integration test passes
 
 ---
 
-### 5. test_load_and_prepare_data_creates_sample_data()
-Tests: Automatic data generation
-
-Corner cases:
-
-Creates sample if files missing
-
-Returns DataFrame with required columns
-
-No missing values in critical columns
+## Notes / Assumptions
+- Yields are predicted in **kg/ha**
+- Negative predicted yields are clipped to 0 (physically meaningful)
+- The project is designed to be runnable even without real datasets (demo mode)
 
 ---
 
-### 6. test_load_and_prepare_data_handles_missing_values()
-Tests: Data cleaning functionality
-
-Corner cases:
-
-Removes rows with NaN
-
-No NaN in key columns after cleaning
-
-Retains sufficient data
-
----
-
-### 7. test_preprocess_features_returns_valid_outputs()
-Tests: Feature preprocessing
-
-Corner cases:
-
-Returns 4-tuple (X, y, names, encoders)
-
-X has only numeric values
-
-X and y same length
-
-No NaN values
-
----
-
-### 8. test_preprocess_features_encodes_varieties()
-Tests: Categorical encoding
-
-Corner cases:
-
-Variety names encoded to integers
-
-Encoders persist in dict
-
-Encoded values in reasonable range.
-
----
+## Authors
+- **Aster Noel Dsouza** (Student ID: **29211**)
+- **David Heleno Bebiano Da Costa Morais** (Student ID: **29400**)
