@@ -104,7 +104,7 @@ def load_and_prepare_data(trials_file, yield_file, soil_file):
             "pH_range_max": [7.2, 7.6, 7.4, 7.0],
         })
 
-    # ✅ Standardize merge keys to avoid mismatches (case/spacing issues)
+    #  Standardize merge keys to avoid mismatches (case/spacing issues)
     trials["soil_texture_class"] = trials["soil_texture_class"].astype(str).str.strip().str.lower()
     soils["soil_name"] = soils["soil_name"].astype(str).str.strip().str.lower()
 
