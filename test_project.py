@@ -114,7 +114,7 @@ def test_predictor_predict_returns_non_negative_yields():
  #Test that load_and_prepare_data() creates sample data if files don't exist.
 def test_load_and_prepare_data_creates_sample_data():
 # Execute: Call with non-existent files to trigger sample generation
-    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+    data = load_and_prepare_data('nonexistent_trials.csv', 'nonexistent_yield.csv', 'nonexistent_soil.csv')
 # Assert
     assert isinstance(data, pd.DataFrame), "Should return DataFrame"
     assert len(data) > 0, "Should have data rows"
@@ -132,7 +132,7 @@ def test_load_and_prepare_data_creates_sample_data():
 #Test that load_and_prepare_data() properly handles missing data.
 def test_load_and_prepare_data_handles_missing_values():
  # Execute
-    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+    data = load_and_prepare_data('nonexistent_trials.csv', 'nonexistent_yield.csv', 'nonexistent_soil.csv')
 # Assert
     critical_cols = ['ph', 'organic_matter_percent', 'nitrogen_mg_kg', 'yield_kg_ha']
     for col in critical_cols:
@@ -144,7 +144,7 @@ def test_load_and_prepare_data_handles_missing_values():
 #Test that preprocess_features() returns correctly structured outputs.
 def test_preprocess_features_returns_valid_outputs():
 # Setup: Create sample data
-    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+    data = load_and_prepare_data('nonexistent_trials.csv', 'nonexistent_yield.csv', 'nonexistent_soil.csv')
 # Execute
     X, y, feature_names, encoders = preprocess_features(data)
 # Assert
@@ -167,7 +167,7 @@ def test_preprocess_features_returns_valid_outputs():
 #Test that preprocess_features() properly encodes categorical variety data.
 def test_preprocess_features_encodes_varieties():
 # Setup
-    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+    data = load_and_prepare_data('nonexistent_trials.csv', 'nonexistent_yield.csv', 'nonexistent_soil.csv')
 # Execute
     X, y, feature_names, encoders = preprocess_features(data)
 # Assert
@@ -182,7 +182,7 @@ def test_preprocess_features_encodes_varieties():
 #Integration test: Load -> Preprocess -> Train -> Predict full workflow.
 def test_full_pipeline_integration():
 # Step 1: Load data
-    data = load_and_prepare_data('nonexistent_trial.csv', 'nonexistent_soil.csv')
+    data = load_and_prepare_data('nonexistent_trials.csv', 'nonexistent_yield.csv', 'nonexistent_soil.csv')
     assert len(data) > 0, "Data loading failed"
     
 # Step 2: Preprocess

@@ -47,9 +47,9 @@ class CropYieldPredictor:
  
 #Loading the simulated trial data and soil data, merge them, and prepare them for analysis.(copied from the DMS Project)
    
-def load_and_prepare_data(trial_file, soil_file):
+def load_and_prepare_data(trials_file , yield_file, soil_file):
     # Try to load existing files
-    if os.path.exists(trial_file) and os.path.exists(soil_file):
+    if os.path.exists(trials_file) and os.path.exists(yield_file) and os.path.exists(soil_file):
         trials = pd.read_csv(trial_file)
         soils = pd.read_csv(soil_file)
 
@@ -211,8 +211,11 @@ def main():
     
 # Step 1: Load and prepare data
     print("\n[Step 1] Loading and preparing data...")
-    data = load_and_prepare_data("data/processed/trial_results_summary_by_soilvariety.csv",
-    "data/processed/soil_types_cleaned.csv")
+    data = load_and_prepare_data(
+    "data/raw/trials_raw.csv",
+    "data/raw/yield_raw.csv",
+    "data/processed/soil_types_cleaned.csv"
+)
     print(f"  ✓ Loaded {len(data)} trial records")
     print(f"  ✓ Data columns: {list(data.columns)[:5]}...")
     
