@@ -119,13 +119,20 @@ def test_load_and_prepare_data_creates_sample_data():
     assert isinstance(data, pd.DataFrame), "Should return DataFrame"
     assert len(data) > 0, "Should have data rows"
     
-    required_cols = ['yield_kg_ha', 'ph', 'organic_matter_percent', 'nitrogen_mg_kg']
+    required_cols = [
+        "yield_kg_ha",
+        "pH_range_min",
+        "pH_range_max",
+        "sand_percentage",
+        "silt_percentage",
+        "clay_percentage"    
+    ]
     for col in required_cols:
         assert col in data.columns, f"Should contain '{col}' column"
         assert data[col].notna().all(), f"'{col}' should have no missing values"
     
     assert (data['yield_kg_ha'] >= 0).all(), "Yields should be non-negative"
-    assert (data['ph'] >= 6.5).all() and (data['ph'] <= 7.5).all(), "pH should be in valid range"
+    assert (data["pH_range_min"] >= 6.0).all() and (data["pH_range_max"] <= 8.0).all(), "pH range should be valid"
 
 
 
@@ -134,7 +141,14 @@ def test_load_and_prepare_data_handles_missing_values():
  # Execute
     data = load_and_prepare_data('nonexistent_trials.csv', 'nonexistent_yield.csv', 'nonexistent_soil.csv')
 # Assert
-    critical_cols = ['ph', 'organic_matter_percent', 'nitrogen_mg_kg', 'yield_kg_ha']
+    critical_cols = [
+        "yield_kg_ha",
+        "pH_range_min",
+        "pH_range_max",
+        "sand_percentage",
+        "silt_percentage",
+        "clay_percentage"
+    ]
     for col in critical_cols:
         assert data[col].isna().sum() == 0, f"'{col}' should have no missing values after prepare"
     
