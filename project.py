@@ -47,139 +47,170 @@ class CropYieldPredictor:
  
 #Loading the simulated trial data and soil data, merge them, and prepare them for analysis.(copied from the DMS Project)
    
-def load_and_prepare_data(trials_file , yield_file, soil_file):
-    # Try to load existing files
-    if os.path.exists(trials_file) and os.path.exists(yield_file) and os.path.exists(soil_file):
-        trials = pd.read_csv(trial_file)
+def load_and_prepare_data(trials_file, yield_file, soil_file):
+    """
+    Loads the trials dataset and optionally merges soil info.
+    If files do not exist, generates demo data for testing.
+    """
+
+    # ---- REAL DATA MODE ----
+    if os.path.exists(trials_file) and os.path.exists(soil_file):
+        trials = pd.read_csv(trials_file)
         soils = pd.read_csv(soil_file)
 
-        # ✅ If processed dataset does NOT contain soil_type_id, skip merge
-        if "soil_type_id" not in trials.columns:
-            print("✓ Processed summary dataset detected (no soil_type_id). Skipping merge.")
-            return trials
+        # ✅ Add AFTER reading CSVs (real data mode):
+        print("✅ Trials rows loaded:", len(trials))
+        print("✅ Soils rows loaded:", len(soils))
 
+        # yield_file is optional because trials_raw.csv already contains yield_kg_ha
+        if os.path.exists(yield_file):
+            yield_df = pd.read_csv(yield_file)
+
+            # Merge only if yield_df contains trial_code + yield_kg_ha
+            if "trial_code" in yield_df.columns and "yield_kg_ha" in yield_df.columns:
+                trials = trials.merge(
+                    yield_df[["trial_code", "yield_kg_ha"]],
+                    on="trial_code",
+                    how="left",
+                    suffixes=("", "_from_yieldfile")
+                )
+
+    # ---- DEMO DATA MODE (for tests) ----
     else:
-        # Create sample data for demonstration
         print("Creating sample data for demonstration...")
 
         trials = pd.DataFrame({
-            'trial_id': range(1, 121),
-            'field_id': np.repeat(range(1, 9), 15),
-            'variety_name': np.tile(['Variety A', 'Variety B', 'Variety C', 'Variety D',
-                                     'Variety E', 'Variety F', 'Variety G', 'Variety H'], 15),
-            'soil_type_id': np.repeat(range(1, 9), 15),
-            'planting_date': pd.date_range('2024-03-01', periods=120, freq='D'),
-            'harvest_date': pd.date_range('2024-08-01', periods=120, freq='D')
+            "trial_code": [f"T{i}" for i in range(1, 121)],
+            "location_name": np.random.choice(["Centro", "Norte"], 120),
+            "year": np.random.choice([2021, 2022, 2023, 2024], 120),
+            "crop": np.random.choice(["Wheat", "Rice", "Maize", "Barley"], 120),
+            "variety_name": np.random.choice(["Wheat_V1", "Wheat_V2", "Rice_V1", "Rice_V2"], 120),
+            "soil_texture_class": np.random.choice(["Clay Loam", "Sandy Loam", "Loam", "Clay"], 120),
+            "area_ha": np.random.uniform(2.0, 3.0, 120).round(1),
+            "seed_rate_kg_ha": np.random.uniform(170, 210, 120).round(0),
+            "n_kg_ha": np.random.uniform(90, 120, 120).round(0),
+            "p_kg_ha": np.random.uniform(55, 75, 120).round(0),
+            "k_kg_ha": np.random.uniform(50, 75, 120).round(0),
+            "irrigation_mm": np.random.uniform(380, 820, 120).round(0),
         })
+
+        # Generate realistic yield
+        trials["yield_kg_ha"] = (
+            trials["n_kg_ha"] * 10
+            + trials["p_kg_ha"] * 5
+            + trials["k_kg_ha"] * 4
+            + trials["irrigation_mm"] * 2
+            + np.random.normal(0, 200, len(trials))
+        ).clip(lower=500)
 
         soils = pd.DataFrame({
-            'soil_type_id': range(1, 9),
-            'soil_name': ['Clay', 'Sandy Loam', 'Silt Loam', 'Clay Loam',
-                         'Sandy Clay', 'Silty Clay', 'Loamy Sand', 'Peat'],
-            'ph': [6.8, 7.2, 6.9, 7.1, 6.7, 6.5, 7.3, 6.6],
-            'organic_matter_percent': [3.5, 2.1, 4.2, 3.8, 1.9, 2.8, 1.5, 8.2],
-            'nitrogen_mg_kg': [45, 28, 52, 38, 22, 35, 18, 65]
+            "soil_name": ["Clay Loam", "Sandy Loam", "Loam", "Clay"],
+            "sand_percentage": [30, 60, 40, 20],
+            "silt_percentage": [40, 25, 40, 30],
+            "clay_percentage": [30, 15, 20, 50],
+            "pH_range_min": [6.5, 6.8, 6.7, 6.2],
+            "pH_range_max": [7.2, 7.6, 7.4, 7.0],
         })
 
-    # Merge datasets (only works if soil_type_id exists)
-    merged_data = trials.merge(soils, on='soil_type_id', how='left')
+    # ✅ Standardize merge keys to avoid mismatches (case/spacing issues)
+    trials["soil_texture_class"] = trials["soil_texture_class"].astype(str).str.strip().str.lower()
+    soils["soil_name"] = soils["soil_name"].astype(str).str.strip().str.lower()
 
-    # Handle missing values
-    merged_data = merged_data.dropna(subset=['ph', 'organic_matter_percent', 'nitrogen_mg_kg'])
+    # ---- MERGE TRIALS + SOIL INFO ----
+    merged_data = trials.merge(
+        soils,
+        left_on="soil_texture_class",
+        right_on="soil_name",
+        how="left"
+    )
 
-    # Generate realistic yield values if missing
-    if 'yield_kg_ha' not in merged_data.columns:
-        merged_data['yield_kg_ha'] = (
-            (merged_data['nitrogen_mg_kg'] / 10) +
-            (merged_data['organic_matter_percent'] * 100) +
-            (merged_data['ph'] * 150) +
-            np.random.normal(0, 200, len(merged_data))
-        )
-        merged_data['yield_kg_ha'] = merged_data['yield_kg_ha'].clip(lower=500)
+    # ✅ Add AFTER merge:
+    print("✅ Rows after merge:", len(merged_data))
+    print("Missing soil matches:", merged_data["soil_name"].isna().sum())
 
     return merged_data
 
-
-#Prepare features for machine learning model
+# Prepare features for machine learning model
 def preprocess_features(data):
-# Create a copy to avoid modifying original
     df = data.copy()
-    
-# Encode categorical variables
+
+    # Encode categorical variables
     label_encoders = {}
-    categorical_cols = ['variety_name', 'soil_name']
-    
+    categorical_cols = ["crop", "variety_name", "soil_texture_class"]
+
     for col in categorical_cols:
         if col in df.columns:
             le = LabelEncoder()
-            df[col + '_encoded'] = le.fit_transform(df[col])
+            df[col + "_encoded"] = le.fit_transform(df[col].astype(str))
             label_encoders[col] = le
-    
-# Select features for the model
+
+    # Feature columns from trials_raw.csv (REAL column names)
     feature_cols = [
-        'nitrogen_mg_kg',
-        'organic_matter_percent',
-        'ph',
-        'variety_name_encoded',
-        'soil_name_encoded'
+        "seed_rate_kg_ha",
+        "n_kg_ha",
+        "p_kg_ha",
+        "k_kg_ha",
+        "irrigation_mm",
+        "area_ha",
+        "crop_encoded",
+        "variety_name_encoded",
+        "soil_texture_class_encoded"
     ]
-    
-# Filter to only columns that exist
-    feature_cols = [col for col in feature_cols if col in df.columns]
-    
-    X = df[feature_cols].fillna(df[feature_cols].mean())
-    y = df['yield_kg_ha']
-    
+
+    # Keep only columns that exist
+    feature_cols = [c for c in feature_cols if c in df.columns]
+
+    X = df[feature_cols].copy()
+    X = X.apply(pd.to_numeric, errors="coerce")
+    X = X.fillna(X.mean(numeric_only=True))
+
+    if "yield_kg_ha" not in df.columns:
+        raise KeyError("yield_kg_ha not found. Check trials_raw.csv")
+    y = df["yield_kg_ha"]
+
     return X, y, feature_cols, label_encoders
 
 #Generate crop variety recommendations based on predicted yields.
 
-def generate_recommendations(data, model, scaler_data):
-    X_features, _, feature_names, encoders = preprocess_features(data)
-# Get unique soil types and varieties
-    soils = data['soil_name'].unique()
-    varieties = data['variety_name'].unique()
-    
+def generate_recommendations(data, model):
+    _, _, _, encoders = preprocess_features(data)
+
+    soil_types = data["soil_texture_class"].unique()
+    varieties = data["variety_name"].unique()
+
     recommendations = []
-    
-    for soil in soils:
-        soil_data = data[data['soil_name'] == soil].iloc[0]
+
+    for soil in soil_types:
+        soil_data = data[data["soil_texture_class"] == soil].iloc[0]
+
         best_variety = None
-        best_yield = 0
-        results_for_soil = []
-        
+        best_yield = -1
+
         for variety in varieties:
-# Create feature vector for prediction
-            variety_data = data[data['variety_name'] == variety].iloc[0] if variety in data['variety_name'].values else soil_data
-            
             features = pd.DataFrame({
-                'nitrogen_mg_kg': [soil_data['nitrogen_mg_kg']],
-                'organic_matter_percent': [soil_data['organic_matter_percent']],
-                'ph': [soil_data['ph']],
-                'variety_name_encoded': [encoders['variety_name'].transform([variety])[0]],
-                'soil_name_encoded': [encoders['soil_name'].transform([soil])[0]]
+                "seed_rate_kg_ha": [soil_data["seed_rate_kg_ha"]],
+                "n_kg_ha": [soil_data["n_kg_ha"]],
+                "p_kg_ha": [soil_data["p_kg_ha"]],
+                "k_kg_ha": [soil_data["k_kg_ha"]],
+                "irrigation_mm": [soil_data["irrigation_mm"]],
+                "area_ha": [soil_data["area_ha"]],
+                "crop_encoded": [encoders["crop"].transform([soil_data["crop"]])[0]],
+                "variety_name_encoded": [encoders["variety_name"].transform([variety])[0]],
+                "soil_texture_class_encoded": [encoders["soil_texture_class"].transform([soil])[0]],
             })
-            
+
             predicted_yield = model.predict(features)[0]
-            results_for_soil.append({
-                'soil_name': soil,
-                'variety_name': variety,
-                'predicted_yield_kg_ha': round(predicted_yield, 2),
-                'nitrogen_mg_kg': soil_data['nitrogen_mg_kg'],
-                'ph': soil_data['ph'],
-                'organic_matter_percent': soil_data['organic_matter_percent']
-            })
-            
+
             if predicted_yield > best_yield:
                 best_yield = predicted_yield
                 best_variety = variety
-        
-# Add recommendation for best variety
-        best_rec = next((r for r in results_for_soil if r['variety_name'] == best_variety), None)
-        if best_rec:
-            best_rec['rank'] = '1st - RECOMMENDED'
-            recommendations.append(best_rec)
-    
+
+        recommendations.append({
+            "soil_texture_class": soil,
+            "recommended_variety": best_variety,
+            "predicted_yield_kg_ha": round(best_yield, 2)
+        })
+
     return pd.DataFrame(recommendations)
 
 #Save prediction and recommendation results to CSV files.
@@ -258,7 +289,7 @@ def main():
     
 # Step 6: Generate recommendations
     print("\n[Step 6] Generating variety recommendations...")
-    recommendations = generate_recommendations(data, predictor, (X, y, feature_names, encoders))
+    recommendations = generate_recommendations(data, predictor)
     print(f"  ✓ Generated {len(recommendations)} recommendations")
     print(f"  ✓ Average recommended yield: {recommendations['predicted_yield_kg_ha'].mean():.2f} kg/ha")
     
