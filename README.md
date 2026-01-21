@@ -3,7 +3,7 @@
 This repository contains our **Python Final Project (2025/2026)** for the *Masters in Data Science applied to agricultural and food sciences, environment, and forestry engineering*.
 
 The project builds a complete workflow to:
-- load smart-farming field trial + soil datasets (real files or demo mode)
+- load smart-farming field trial + soil datasets (**real CSV files** or **demo mode**)
 - train a machine learning model to **predict crop yield (kg/ha)**
 - generate **best crop variety recommendations per soil texture class**
 - export results into CSV files for reporting
@@ -18,7 +18,7 @@ When you run `project.py`, it performs these steps:
    Reads the raw trial dataset and merges soil composition information.
 
 2. **Preprocess features**  
-   Encodes categorical columns and selects numeric features for ML.
+   Encodes categorical columns and selects numeric features for machine learning.
 
 3. **Train/Test split (80/20)**  
    Splits data into training and testing sets.
@@ -74,24 +74,45 @@ smart-farming-python-project/
 
 The program is designed to work with the datasets from our earlier **DMS project**.
 
-### Required file (recommended)
+### Required files (recommended)
 Place inside: `data/raw/`
-- `trials_raw.csv`
+- `trials_raw.csv` *(must contain `yield_kg_ha` OR can be paired with `yield_raw.csv`)*
 
-### Soil data (required for merge)
 Place inside: `data/processed/`
-- `soil_types_cleaned.csv`
+- `soil_types_cleaned.csv` *(used for merging soil composition fields)*
 
 ### Optional files
 Place inside: `data/raw/`
 - `yield_raw.csv`  
-  Used only if it includes `trial_code` and `yield_kg_ha` (otherwise yield is read from `trials_raw.csv`)
+  Used only if it includes `trial_code` and `yield_kg_ha`. If the trial file already contains `yield_kg_ha`, this file is not needed.
 
 - `soil_raw.csv`  
-  Not required if you already use the cleaned soil dataset.
+  Not required if you use the cleaned soil dataset.
 
 ### Demo / test mode
-If real CSV files are missing, the program automatically generates **sample demo data** so it can still run.
+If real CSV files are missing, the program automatically generates **sample demo data** so the project can still run.
+
+---
+
+## Features Used in the Model (matches the current pipeline)
+
+The ML model is trained using numeric and encoded categorical features:
+
+**Numeric features**
+- `seed_rate_kg_ha`
+- `n_kg_ha`
+- `p_kg_ha`
+- `k_kg_ha`
+- `irrigation_mm`
+- `area_ha`
+
+**Encoded categorical features**
+- `crop_encoded`
+- `variety_name_encoded`
+- `soil_texture_class_encoded`
+
+**Target column**
+- `yield_kg_ha`
 
 ---
 
@@ -131,6 +152,15 @@ After a successful run, two files will be created inside `outputs/`:
 
 - `outputs/variety_recommendations.csv`  
   Shows the recommended variety for each soil texture class and its predicted yield.
+
+---
+
+## How Recommendations Are Generated
+
+For each `soil_texture_class`, the program:
+1. evaluates every available `variety_name`
+2. predicts yield using the trained model
+3. recommends the variety with the **highest predicted yield**
 
 ---
 
@@ -209,6 +239,21 @@ Runs the full workflow end-to-end and prints a summary report.
 
 ---
 
+## Example Console Output (sample)
+
+You may see output similar to:
+
+```
+[Step 4] Training CropYieldPredictor model...
+✓ Training R² score: 0.92
+✓ Test RMSE: 180.45 kg/ha
+
+[Step 6] Generating variety recommendations...
+✓ Generated 4 recommendations
+```
+
+---
+
 ## How to Run Tests
 
 Run all tests:
@@ -244,3 +289,4 @@ The test suite validates:
 ## Authors
 - **Aster Noel Dsouza** (Student ID: **29211**)
 - **David Heleno Bebiano Da Costa Morais** (Student ID: **29400**)
+
