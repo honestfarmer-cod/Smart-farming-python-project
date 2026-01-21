@@ -4,8 +4,6 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
-import csv
-import sys
 import os
 
 #A machine learning model for predicting crop yields based on soil,
@@ -58,10 +56,6 @@ def load_and_prepare_data(trials_file, yield_file, soil_file):
         trials = pd.read_csv(trials_file)
         soils = pd.read_csv(soil_file)
 
-        # ✅ Add AFTER reading CSVs (real data mode):
-        print("✅ Trials rows loaded:", len(trials))
-        print("✅ Soils rows loaded:", len(soils))
-
         # yield_file is optional because trials_raw.csv already contains yield_kg_ha
         if os.path.exists(yield_file):
             yield_df = pd.read_csv(yield_file)
@@ -77,8 +71,6 @@ def load_and_prepare_data(trials_file, yield_file, soil_file):
 
     # ---- DEMO DATA MODE (for tests) ----
     else:
-        print("Creating sample data for demonstration...")
-
         trials = pd.DataFrame({
             "trial_code": [f"T{i}" for i in range(1, 121)],
             "location_name": np.random.choice(["Centro", "Norte"], 120),
@@ -124,11 +116,8 @@ def load_and_prepare_data(trials_file, yield_file, soil_file):
         how="left"
     )
 
-    # ✅ Add AFTER merge:
-    print("✅ Rows after merge:", len(merged_data))
-    print("Missing soil matches:", merged_data["soil_name"].isna().sum())
-
     return merged_data
+
 
 # Prepare features for machine learning model
 def preprocess_features(data):
@@ -214,7 +203,7 @@ def generate_recommendations(data, model):
     return pd.DataFrame(recommendations)
 
 #Save prediction and recommendation results to CSV files.
-def save_results(predictions, recommendations, output_dir='output'):
+def save_results(predictions, recommendations, output_dir='outputs'):
 # Create output directory if needed
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
